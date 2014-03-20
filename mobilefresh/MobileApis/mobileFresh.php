@@ -221,7 +221,7 @@ $foodArry = array();
         if(strcasecmp($_GET['usertype'],'admin')==0)
         {
 
-            $sql = "SELECT * from foodinfo where status LIKE '%wating%' ";   
+            $sql = "SELECT * from foodinfo where status ='wating' ";   
             
             //$sql = "SELECT * from foodinfo inner join userinfo on 'foodinfo.email=userinfo.email' where 'foodinfo.status' LIKE '%wating%' ";   
             $result = mysql_query($sql) or die(mysql_error());
@@ -229,10 +229,10 @@ $foodArry = array();
             
             while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC)) {
 
-                $foodArry[] = $selector1;
+                 $foodArry[] = $selector1;
        
             }
-           
+         
            // for($i=0;$i<sizeof($foodArry);$i++)
             //{
                 /*
@@ -243,7 +243,7 @@ $foodArry = array();
                 $foodAry[$i]['foodtype'] = $foodArry[$i]['foodtype'];*/
             
             //}
-            for($i=0;$i<sizeof($foodArry);$i++)
+            for($i=0;$i<sizeof($foodArry)-1;$i++)
             {
                 $foodAry[$i]['NodeId']=$foodArry[$i]['id'];
                 $foodAry[$i]['title']= $foodArry[$i]['address'];
@@ -275,12 +275,13 @@ $foodArry = array();
         $organizationname=$_GET['organizationname'];
         $usertype=$_GET['usertype'];
         $pin=$_GET['pin'];
-        $sql="SELECT * FROM pinTable";
+        $sql="SELECT pin FROM pinTable";
         $result = mysql_query($sql) or die(mysql_error());
         while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC))
         {
-                $pinArry[] = $selector1;
+                 $pinArry[] = $selector1['pin'];
         }
+
         if (in_array($pin, $pinArry))
         {
             $sql="INSERT INTO userinfo (username,email,password,organizationname,usertype,pin) VALUES ('$username','$email','$password','$organizationname','$usertype','$pin')";
@@ -343,13 +344,13 @@ $foodArry = array();
 
 
 //Update Food Status
-    if( strcasecmp($_GET['method'], 'updatefoodStatus')==0)
+    if( strcasecmp($_GET['method'], 'foodStatus')==0)
     {
         if(strcasecmp($_GET['usertype'],'admin')==0)
         {
             $status=$_GET['status'];
             $Nodeid=$_GET['nodeid'];
-            $sql="UPDATE foodinfo set status= '$status' where id= '$Nodeid'";
+            $sql="UPDATE foodinfo set status='$status' where id='$Nodeid'";
             $result = mysql_query($sql) or die(mysql_error());
             
             $response['message'] = "Success";
