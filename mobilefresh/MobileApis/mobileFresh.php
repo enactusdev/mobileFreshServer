@@ -204,9 +204,9 @@ function getuser($email)
         $time=$_GET['time'];
         $geocode=$_GET['geocode'];
         $status=$_GET['status'];
-        $email=$_GET['username'];
+        $address=$_GET['address'];
 
-        $sql="INSERT INTO foodinfo (foodtype,time,geocode,status,username) VALUES ('$foodtype','$time','$geocode','$status','$email')";
+        $sql="INSERT INTO foodinfo (foodtype,time,geocode,status,address) VALUES ('$foodtype','$time','$geocode','$status','$address')";
         $result = mysql_query($sql) or die(mysql_error());
         $response['message'] = $api_response_code[1]['Message'];
         
@@ -221,18 +221,6 @@ $foodArry = array();
         if(strcasecmp($_GET['usertype'],'admin')==0)
         {
 
-
-/*
-$sql="SELECT f.*,u.*
-FROM foodinfo f,userinfo u
-INNER JOIN userinfo 
-ON 'f.email'='u.email'";
-*/
-
-
-
-
-
             $sql = "SELECT * from foodinfo where status LIKE '%wating%' ";   
             
             //$sql = "SELECT * from foodinfo inner join userinfo on 'foodinfo.email=userinfo.email' where 'foodinfo.status' LIKE '%wating%' ";   
@@ -242,11 +230,7 @@ ON 'f.email'='u.email'";
             while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC)) {
 
                 $foodArry[] = $selector1;
-                //$foodAy['NodeLocation']=explode(",",$selector1['geocode']);
-               // $foodAry['NodeLocation']['Latitude']=$foodAy['NodeLocation'][0];
-               // $foodAry['NodeLocation']['Longitude']=$foodAy['NodeLocation'][1];
-               // $foodAry['time'] = $selector1['time'];
-               // $foodAry['foodtype'] = $selector1['foodtype'];
+       
             }
            
            // for($i=0;$i<sizeof($foodArry);$i++)
@@ -262,9 +246,10 @@ ON 'f.email'='u.email'";
             for($i=0;$i<sizeof($foodArry);$i++)
             {
                 $foodAry[$i]['NodeId']=$foodArry[$i]['id'];
-                $foodAry[$i]['title']= $foodArry[$i]['username'];
-                $foodAry[$i]['NodeLocation']= $foodArry[$i]['geocode'];
-
+                $foodAry[$i]['title']= $foodArry[$i]['address'];
+                $foodArry['NodeLocation']= explode(",",$foodArry[$i]['geocode']);
+                $foodAry[$i]['NodeLocation']['Latitude']= $foodArry['NodeLocation'][0];
+                $foodAry[$i]['NodeLocation']['Longitude']= $foodArry['NodeLocation'][1];
                 $foodAry[$i]['time'] = $foodArry[$i]['time'];
                 $foodAry[$i]['foodtype'] = $foodArry[$i]['foodtype'];
             }
@@ -289,10 +274,24 @@ ON 'f.email'='u.email'";
         $password=$_GET['password'];
         $organizationname=$_GET['organizationname'];
         $usertype=$_GET['usertype'];
-
-        $sql="INSERT INTO userinfo (username,email,password,organizationname,usertype) VALUES ('$username','$email','$password','$organizationname','$usertype')";
+        $pin=$_GET['pin'];
+        $sql="SELECT * FROM pinTable";
         $result = mysql_query($sql) or die(mysql_error());
-        $response['message'] = $api_response_code[1]['Message'];
+        while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC))
+        {
+                $pinArry[] = $selector1;
+        }
+        if (in_array($pin, $pinArry))
+        {
+            $sql="INSERT INTO userinfo (username,email,password,organizationname,usertype,pin) VALUES ('$username','$email','$password','$organizationname','$usertype','$pin')";
+            $result = mysql_query($sql) or die(mysql_error());
+            $response['message'] = $api_response_code[1]['Message'];
+        }
+        else
+        {
+            $response['message'] = "$pin not found";
+            
+        }
         
     }
 
@@ -303,6 +302,7 @@ ON 'f.email'='u.email'";
         open();
         $email=$_GET['email'];
         $password=$_GET['password'];
+        $pin=$_GET['pin'];
         $token=(rand(1000000000,9999999999).$email);
         $max=date("d/m/y")+7;
         write($email, $token);
