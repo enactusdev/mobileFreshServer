@@ -1,6 +1,6 @@
 <?php
 
- 
+// Kaustub 
 // --- Step 1: Initialize variables and functions
  
 /**
@@ -180,17 +180,19 @@ $response['message'] = NULL;
  
 
 //Get User Information
-    if( strcasecmp($_GET['method'],'getuserinfo') == 0){
-        $sql = "SELECT * from userinfo ";   
+function getuser($email)
+    //if( strcasecmp($_GET['method'],'getuserinfo') == 0)
+    {
+        $sql = "SELECT * from userinfo where email='$email' ";   
         $result = mysql_query($sql) or die(mysql_error());
 
         $usernameArry = array();
         while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC)) {
             $username = $selector1;
-            $usernameArry[] = $username;
+            $usernameArry['username'] = $selector1['username'];
         }
-        $response['status'] = $api_response_code[ $response['code'] ]['Message'];
-        $response['data'] = $usernameArry; 
+        //$response['status'] = $api_response_code[ $response['code'] ]['Message'];
+        return $usernameArry; 
     
     }
 
@@ -202,9 +204,9 @@ $response['message'] = NULL;
         $time=$_GET['time'];
         $geocode=$_GET['geocode'];
         $status=$_GET['status'];
-    
+        $email=$_GET['username'];
 
-        $sql="INSERT INTO foodinfo (foodtype,time,geocode,status) VALUES ('$foodtype','$time','$geocode','$status')";
+        $sql="INSERT INTO foodinfo (foodtype,time,geocode,status,username) VALUES ('$foodtype','$time','$geocode','$status','$email')";
         $result = mysql_query($sql) or die(mysql_error());
         $response['message'] = $api_response_code[1]['Message'];
         
@@ -214,26 +216,66 @@ $response['message'] = NULL;
 //Get NodeList
     if( strcasecmp($_GET['method'],'getnodeList') == 0)
     {
+$foodArry = array();
 
         if(strcasecmp($_GET['usertype'],'admin')==0)
         {
-            $sql = "SELECT * from foodinfo where status LIKE '%wating%'";   
+
+
+/*
+$sql="SELECT f.*,u.*
+FROM foodinfo f,userinfo u
+INNER JOIN userinfo 
+ON 'f.email'='u.email'";
+*/
+
+
+
+
+
+            $sql = "SELECT * from foodinfo where status LIKE '%wating%' ";   
+            
+            //$sql = "SELECT * from foodinfo inner join userinfo on 'foodinfo.email=userinfo.email' where 'foodinfo.status' LIKE '%wating%' ";   
             $result = mysql_query($sql) or die(mysql_error());
 
-            $foodArry = array();
+            
             while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC)) {
-                $foodArry['NodeLocation'] = $selector1['geocode'];
-                $foodArry['time'] = $selector1['time'];
-                $foodArry['foodtype'] = $selector1['foodtype'];
+
+                $foodArry[] = $selector1;
+                //$foodAy['NodeLocation']=explode(",",$selector1['geocode']);
+               // $foodAry['NodeLocation']['Latitude']=$foodAy['NodeLocation'][0];
+               // $foodAry['NodeLocation']['Longitude']=$foodAy['NodeLocation'][1];
+               // $foodAry['time'] = $selector1['time'];
+               // $foodAry['foodtype'] = $selector1['foodtype'];
+            }
+           
+           // for($i=0;$i<sizeof($foodArry);$i++)
+            //{
+                /*
+                $foodAy[$i]['NodeLocation']=explode(",",$foodArry[$i]['geocode']);
+                $foodAry[$i]['NodeLocation']['Latitude']=$foodAy[$i]['NodeLocation'][0];
+                $foodAry[$i]['NodeLocation']['Longitude']=$foodAy[$i]['NodeLocation'][1];
+                $foodAry[$i]['time'] = $foodArry[$i]['time'];
+                $foodAry[$i]['foodtype'] = $foodArry[$i]['foodtype'];*/
+            
+            //}
+            for($i=0;$i<sizeof($foodArry);$i++)
+            {
+                $foodAry[$i]['NodeId']=$foodArry[$i]['id'];
+                $foodAry[$i]['title']= $foodArry[$i]['username'];
+                $foodAry[$i]['NodeLocation']= $foodArry[$i]['geocode'];
+
+                $foodAry[$i]['time'] = $foodArry[$i]['time'];
+                $foodAry[$i]['foodtype'] = $foodArry[$i]['foodtype'];
             }
         
             $response['message'] ='success';
-            $response['data'] = $foodArry; 
+            $response['data'] = $foodAry; 
         }
         if(strcasecmp($_GET['usertype'],'admin')!=0)
         {
-        
-            $response['message'] ='cannot display';
+            $usertype=$_GET['usertype'];
+            $response['message'] ="cannot display for $usertype";
         }
     }
 
@@ -273,15 +315,21 @@ $response['message'] = NULL;
         if((strcasecmp($email, $usrinfo['email'])==0) && (strcasecmp($password, $usrinfo['password'])==0) && (strcasecmp($usrinfo['usertype'],'admin')==0))
         {
             $logintoken=read($email);
+           $da=getuser($email);
+           $response['status'] = 'Success';
             $response['message'] = "admin signed in"; 
             $response['token'] = $logintoken;
+            $response['username'] = $da['username']; 
             clean($max);
         }
-        if((strcasecmp($email, $usrinfo['email'])==0) && (strcasecmp($password, $usrinfo['password'])==0) && (strcasecmp($usrinfo['usertype'],'user')==0))
+        if((strcasecmp($email, $usrinfo['email'])==0) && (strcasecmp($password, $usrinfo['password'])==0) && (strcasecmp($usrinfo['usertype'],'donator')==0))
         {   
             $logintoken=read($email);
-            $response['message'] = "user signed in";
+            $da=getuser($email);
+           $response['status'] = 'Success';
+            $response['message'] = "donater signed in";
             $response['token'] = $logintoken;
+            $response['username'] = $da['username']; 
             clean($max);
         }
         if((strcasecmp($email, $usrinfo['email'])!=0) || (strcasecmp($password, $usrinfo['password'])!=0))
@@ -300,14 +348,19 @@ $response['message'] = NULL;
         if(strcasecmp($_GET['usertype'],'admin')==0)
         {
             $status=$_GET['status'];
-            $foodtyp=$_GET['foodtype'];
-            $sql="UPDATE foodinfo set status= '$status' where foodtype= '$foodtyp'";
+            $Nodeid=$_GET['nodeid'];
+            $sql="UPDATE foodinfo set status= '$status' where id= '$Nodeid'";
             $result = mysql_query($sql) or die(mysql_error());
-            $response['message'] = $api_response_code[1]['Message'];
-
+            
+            $response['message'] = "Success";
         }
+        $response['message'] = 'Success';
     }      
-
+if( strcasecmp($_GET['method'], 'wellcome')==0)
+    {
+        
+        $response['message'] ='hi good morning';
+    }      
 
 
 
