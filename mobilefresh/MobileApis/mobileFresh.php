@@ -1,6 +1,6 @@
 <?php
 
-// Kaustub 
+
 // --- Step 1: Initialize variables and functions
  
 /**
@@ -205,8 +205,8 @@ function getuser($email)
         $geocode=$_GET['geocode'];
         $status=$_GET['status'];
         $address=$_GET['address'];
-
-        $sql="INSERT INTO foodinfo (foodtype,time,geocode,status,address) VALUES ('$foodtype','$time','$geocode','$status','$address')";
+        $addressDictionary=$_GET['addressDictionary'];
+        $sql="INSERT INTO foodinfo (foodtype,time,geocode,status,address,addressDictionary) VALUES ('$foodtype','$time','$geocode','$status','$address','$addressDictionary')";
         $result = mysql_query($sql) or die(mysql_error());
         $response['message'] = $api_response_code[1]['Message'];
         
@@ -216,14 +216,13 @@ function getuser($email)
 //Get NodeList
     if( strcasecmp($_GET['method'],'getnodeList') == 0)
     {
-$foodArry = array();
+        $foodArry = array();
 
         if(strcasecmp($_GET['usertype'],'admin')==0)
         {
 
-            $sql = "SELECT * from foodinfo where status ='wating' ";   
+            $sql = "SELECT * from foodinfo where status='wating' ";   
             
-            //$sql = "SELECT * from foodinfo inner join userinfo on 'foodinfo.email=userinfo.email' where 'foodinfo.status' LIKE '%wating%' ";   
             $result = mysql_query($sql) or die(mysql_error());
 
             
@@ -233,16 +232,7 @@ $foodArry = array();
        
             }
          
-           // for($i=0;$i<sizeof($foodArry);$i++)
-            //{
-                /*
-                $foodAy[$i]['NodeLocation']=explode(",",$foodArry[$i]['geocode']);
-                $foodAry[$i]['NodeLocation']['Latitude']=$foodAy[$i]['NodeLocation'][0];
-                $foodAry[$i]['NodeLocation']['Longitude']=$foodAy[$i]['NodeLocation'][1];
-                $foodAry[$i]['time'] = $foodArry[$i]['time'];
-                $foodAry[$i]['foodtype'] = $foodArry[$i]['foodtype'];*/
-            
-            //}
+      
             for($i=0;$i<sizeof($foodArry)-1;$i++)
             {
                 $foodAry[$i]['NodeId']=$foodArry[$i]['id'];
@@ -252,7 +242,23 @@ $foodArry = array();
                 $foodAry[$i]['NodeLocation']['Longitude']= $foodArry['NodeLocation'][1];
                 $foodAry[$i]['time'] = $foodArry[$i]['time'];
                 $foodAry[$i]['foodtype'] = $foodArry[$i]['foodtype'];
+                $foodAry[$i]['addressDictionary'] = $foodArry[$i]['addressDictionary'];
             }
+            
+            if(sizeof($foodArry)==1)
+            {
+               
+                    $foodAry[0]['NodeId']=$foodArry[0]['id'];
+                    $foodAry[0]['title']= $foodArry[0]['address'];
+                    $foodArry['NodeLocation']= explode(",",$foodArry[0]['geocode']);
+                    $foodAry[0]['NodeLocation']['Latitude']= $foodArry['NodeLocation'][0];
+                    $foodAry[0]['NodeLocation']['Longitude']= $foodArry['NodeLocation'][1];
+                    $foodAry[0]['time'] = $foodArry[0]['time'];
+                    $foodAry[0]['foodtype'] = $foodArry[0]['foodtype'];
+                    $foodAry[0]['addressDictionary'] = $foodArry[0]['addressDictionary'];
+                 
+            }
+            
         
             $response['message'] ='success';
             $response['data'] = $foodAry; 
@@ -285,11 +291,6 @@ $foodArry = array();
             $response['message'] ="Email Exist";
         }
         else{
-
-
-
-
-
 
         if(strcasecmp($usertype, 'admin')==0)
         {
@@ -381,13 +382,15 @@ $foodArry = array();
             $response['message'] = "Success";
         }
         $response['message'] = 'Success';
-    }      
+    }   
+
+
+//wellcome
 if( strcasecmp($_GET['method'], 'wellcome')==0)
     {
         
         $response['message'] ='hi good morning';
     }      
-
 
 
 
