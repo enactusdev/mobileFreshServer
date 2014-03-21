@@ -274,26 +274,51 @@ $foodArry = array();
         $password=$_GET['password'];
         $organizationname=$_GET['organizationname'];
         $usertype=$_GET['usertype'];
-        $pin=$_GET['pin'];
-        $sql="SELECT pin FROM pinTable";
-        $result = mysql_query($sql) or die(mysql_error());
+        $sql="SELECT * FROM userinfo";
+          $result = mysql_query($sql) or die(mysql_error());
         while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC))
         {
-                 $pinArry[] = $selector1['pin'];
+                     $emailArry[] = $selector1['email'];
         }
-
-        if (in_array($pin, $pinArry))
+        if (in_array($email, $emailArry))
         {
-            $sql="INSERT INTO userinfo (username,email,password,organizationname,usertype,pin) VALUES ('$username','$email','$password','$organizationname','$usertype','$pin')";
+            $response['message'] ="Email Exist";
+        }
+        else{
+
+
+
+
+
+
+        if(strcasecmp($usertype, 'admin')==0)
+        {
+            $pin=$_GET['pin'];
+            $sql="SELECT pin FROM pinTable";
+            $result = mysql_query($sql) or die(mysql_error());
+            while($selector1 = mysql_fetch_array($result, MYSQL_ASSOC))
+            {
+                     $pinArry[] = $selector1['pin'];
+            }
+            if (in_array($pin, $pinArry))
+            {
+                $sql="INSERT INTO userinfo (username,email,password,organizationname,usertype,pin) VALUES ('$username','$email','$password','$organizationname','$usertype','$pin')";
+                $result = mysql_query($sql) or die(mysql_error());
+                $response['message'] = $api_response_code[1]['Message'];
+            }
+            else
+            {
+                $response['message'] = "$pin not found";
+            
+            }
+        }
+        if(strcasecmp($usertype, 'donator')==0)
+        {
+            $sql="INSERT INTO userinfo (username,email,password,organizationname,usertype) VALUES ('$username','$email','$password','$organizationname','$usertype')";
             $result = mysql_query($sql) or die(mysql_error());
             $response['message'] = $api_response_code[1]['Message'];
         }
-        else
-        {
-            $response['message'] = "$pin not found";
-            
-        }
-        
+    }
     }
 
 
